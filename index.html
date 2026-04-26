@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIツールハブ - 無料で使えるAIツール集</title>
+    <script src="https://js.puter.com/v2/"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { font-size: 1.1em; opacity: 0.9; }
+        
+        .auth-section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        #signInBtn {
+            padding: 15px 40px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #signInBtn:hover { background: #5568d3; }
+        
+        .tools-section { display: none; }
+        .tools-section.active { display: block; }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 25px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .tab:hover { background: #f0f0f0; }
+        .tab.active { background: #667eea; color: white; }
+        
+        .tool-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+        }
+        .tool-panel.active { display: block; }
+        
+        .chat-container {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+        }
+        .ai-message {
+            background: #e9ecef;
+            color: #333;
+        }
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+        #chatInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 25px;
+            font-size: 14px;
+        }
+        #chatInput:focus { outline: none; border-color: #667eea; }
+        #sendBtn {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+        
+        .storage-container textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-group button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .file-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .file-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+        .file-item:hover { background: #e9ecef; }
+        
+        .ad-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .ad-label { font-size: 12px; color: #999; margin-bottom: 10px; }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AIツールハブ</h1>
+            <p>無料で使えるAIツール集 - ログインして始める</p>
+        </div>
+        
+        <div class="auth-section" id="authSection">
+            <button id="signInBtn">ログインして始める</button>
+        </div>
+        
+        <div class="tools-section" id="toolsSection">
+            <div class="tabs">
+                <button class="tab active" data-tab="chat">AIチャット</button>
+                <button class="tab" data-tab="storage">クラウドメモ</button>
+                <button class="tab" data-tab="hosting">サイト作成</button>
+            </div>
+            
+            <div class="tool-panel active" id="chatPanel">
+                <h2>AIチャット (GPT-5.4 nano)</h2>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message ai-message">こんにちは！何でも質問してください。</div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="メッセージを入力..." />
+                        <button id="sendBtn">送信</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tool-panel" id="storagePanel">
+                <h2>クラウドメモ</h2>
+                <div class="storage-container">
+                    <textarea id="memoContent" placeholder="ここにメモを入力..."></textarea>
+                    <div class="btn-group">
+                        <button id="saveMemoBtn">保存</button>
+                        <button id="loadMemoBtn">読み込み</button>
+                        <button id="listFilesBtn">ファイル一覧</button>
+                    </div>
+                    <div class="file-list" id="fileList"></div>
+                </div>
+            </div>
+            
+            <div class="tool-panel" id="hostingPanel">
+                <h2>静的サイト作成</h2>
+                <div class="storage-container">
+                    <textarea id="siteContent" placeholder="HTMLコードを入力..."><h1>Hello, World!</h1>
+<p>あなたのサイト</p></textarea>
+                    <div class="btn-group">
+                        <button id="createSiteBtn">サイトを作成</button>
+                    </div>
+                    <div id="siteResult" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ad-container">
+            <div class="ad-label">広告</div>
+            <!-- admax -->
+            <script src="https://adm.shinobi.jp/s/ab4b5665c6d20f45f10dc53cfda016de"></script>
+            <!-- admax -->
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 AIツールハブ | 無料でご利用いただけます</p>
+        </div>
+    </div>
+    
+    <script>
+        const authSection = document.getElementById('authSection');
+        const toolsSection = document.getElementById('toolsSection');
+        const signInBtn = document.getElementById('signInBtn');
+        const tabs = document.querySelectorAll('.tab');
+        const panels = document.querySelectorAll('.tool-panel');
+        
+        let currentMemoFile = 'memo.txt';
+        
+        signInBtn.addEventListener('click', async () => {
+            try {
+                await puter.auth.signIn();
+                authSection.style.display = 'none';
+                toolsSection.classList.add('active');
+            } catch (error) {
+                alert('ログインに失敗しました');
+            }
+        });
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'Panel').classList.add('active');
+            });
+        });
+        
+        // AI Chat
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        
+        function addChatMessage(content, isUser) {
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            div.textContent = content;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        sendBtn.addEventListener('click', async () => {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            addChatMessage(message, true);
+            chatInput.value = '';
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="loading"></span>';
+            
+            try {
+                const response = await puter.ai.chat(message, { model: 'gpt-5.4-nano' });
+                addChatMessage(response, false);
+            } catch (error) {
+                addChatMessage('エラーが発生しました', false);
+            }
+            
+            sendBtn.disabled = false;
+            sendBtn.textContent = '送信';
+        });
+        
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendBtn.click();
+        });
+        
+        // Storage
+        const memoContent = document.getElementById('memoContent');
+        const saveMemoBtn = document.getElementById('saveMemoBtn');
+        const loadMemoBtn = document.getElementById('loadMemoBtn');
+        const listFilesBtn = document.getElementById('listFilesBtn');
+        const fileList = document.getElementById('fileList');
+        
+        saveMemoBtn.addEventListener('click', async () => {
+            const filename = prompt('ファイル名:', currentMemoFile) || currentMemoFile;
+            try {
+                await puter.fs.write(filename, memoContent.value);
+                currentMemoFile = filename;
+                alert('保存しました');
+                listStorageFiles();
+            } catch (error) {
+                alert('保存に失敗しました');
+            }
+        });
+        
+        loadMemoBtn.addEventListener('click', async () => {
+            const filename = prompt('読み込むファイル名:', currentMemoFile) || currentMemoFile;
+            try {
+                const blob = await puter.fs.read(filename);
+                const content = await blob.text();
+                memoContent.value = content;
+                currentMemoFile = filename;
+            } catch (error) {
+                alert('読み込みに失敗しました');
+            }
+        });
+        
+        listFilesBtn.addEventListener('click', listStorageFiles);
+        
+        async function listStorageFiles() {
+            try {
+                const files = await puter.fs.readdir('/');
+                fileList.innerHTML = files.map(file => 
+                    `<div class="file-item" onclick="loadStorageFile('${file.name}')">${file.name}</div>`
+                ).join('');
+            } catch (error) {
+                fileList.innerHTML = 'エラー';
+            }
+        }
+        
+        window.loadStorageFile = async (filename) => {
+            try {
+                const blob = await puter.fs.read(filename);
+                const content = await blob.text();
+                memoContent.value = content;
+                currentMemoFile = filename;
+            } catch (error) {
+                alert('読み込みに失敗しました');
+            }
+        };
+        
+        // Hosting
+        const siteContent = document.getElementById('siteContent');
+        const createSiteBtn = document.getElementById('createSiteBtn');
+        const siteResult = document.getElementById('siteResult');
+        
+        createSiteBtn.addEventListener('click', async () => {
+            try {
+                const dirName = puter.randName();
+                await puter.fs.mkdir(dirName);
+                await puter.fs.write(`${dirName}/index.html`, siteContent.value);
+                
+                const subdomain = puter.randName();
+                const site = await puter.hosting.create(subdomain, dirName);
+                
+                siteResult.innerHTML = `
+                    <p>サイトを作成しました！</p>
+                    <a href="https://${site.subdomain}.puter.site" target="_blank">
+                        https://${site.subdomain}.puter.site
+                    </a>
+                `;
+            } catch (error) {
+                siteResult.innerHTML = 'エラーが発生しました';
+            }
+        });
+    </script>
+</body>
+</html>
